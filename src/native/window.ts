@@ -195,6 +195,7 @@ export function createMainWindow() {
   });
 
   // Create display media request handler
+  let cancelPendingScreenPick: (() => void) | undefined;
   session.defaultSession.setDisplayMediaRequestHandler(
     (request, callback) => {
       desktopCapturer
@@ -212,23 +213,39 @@ export function createMainWindow() {
                 });
             return;
           }
-          ipcMain.once(
-            "screenPickerCallback",
-            (_, idx: number, audio: boolean) => {
-              if (idx < 0 || idx > sources.length) {
-                callback({});
-              } else {
-                audio
-                  ? callback({
-                      video: sources[idx],
-                      audio: "loopback",
-                    })
-                  : callback({
-                      video: sources[idx],
-                    });
-              }
-            },
-          );
+          // only keep one pending picker, otherwise a single reply
+          // would resolve every outstanding request
+          cancelPendingScreenPick?.();
+          const onPick = (
+            event: Electron.IpcMainEvent,
+            idx: number,
+            audio: boolean,
+          ) => {
+            cancelPendingScreenPick = undefined;
+            if (
+              event.sender !== mainWindow.webContents ||
+              !Number.isInteger(idx) ||
+              idx < 0 ||
+              idx >= sources.length
+            ) {
+              callback({});
+            } else {
+              audio === true
+                ? callback({
+                    video: sources[idx],
+                    audio: "loopback",
+                  })
+                : callback({
+                    video: sources[idx],
+                  });
+            }
+          };
+          cancelPendingScreenPick = () => {
+            ipcMain.removeListener("screenPickerCallback", onPick);
+            cancelPendingScreenPick = undefined;
+            callback({});
+          };
+          ipcMain.once("screenPickerCallback", onPick);
           mainWindow.webContents.send(
             "screenPicker",
             sources.map((source, idx) => {
@@ -248,7 +265,8 @@ export function createMainWindow() {
               };
             }),
           );
-        });
+        })
+        .catch(() => callback({}));
     },
     { useSystemPicker: true },
   );
