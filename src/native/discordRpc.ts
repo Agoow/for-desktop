@@ -53,5 +53,5 @@ export async function destroyDiscordRpc() {
   const client = rpc;
   rpc = undefined;
   client?.removeAllListeners();
-  await client?.destroy().catch(() => {});
+  await client?.destroy().catch(() => undefined);
 }
