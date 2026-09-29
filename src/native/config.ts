@@ -59,7 +59,7 @@ const store = new Store({
     startMinimisedToTray: false,
     spellchecker: true,
     hardwareAcceleration: true,
-    discordRpc: true,
+    discordRpc: false,
     windowState: {
       x: 0,
       y: 0,
@@ -178,16 +178,17 @@ class Config {
   }
 
   set discordRpc(value: boolean) {
+    // persist first so that initDiscordRpc() sees the new value
+    (store as never as { set(k: string, value: boolean): void }).set(
+      "discordRpc",
+      value,
+    );
+
     if (value) {
       initDiscordRpc();
     } else {
       destroyDiscordRpc();
     }
-
-    (store as never as { set(k: string, value: boolean): void }).set(
-      "discordRpc",
-      value,
-    );
 
     this.sync();
   }
