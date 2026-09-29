@@ -211,9 +211,34 @@ class Config {
 
 export const config = new Config();
 
-ipcMain.on("config", (_, newConfig: Partial<DesktopConfig>) => {
-  console.info("Received new configuration", newConfig);
-  Object.entries(newConfig).forEach(
-    ([key, value]) => (config[key as keyof DesktopConfig] = value as never),
-  );
+/**
+ * Keys the renderer is allowed to change, all of them booleans
+ */
+const RENDERER_WRITABLE_KEYS = [
+  "customFrame",
+  "minimiseToTray",
+  "startMinimisedToTray",
+  "spellchecker",
+  "hardwareAcceleration",
+  "discordRpc",
+] as const;
+
+type RendererWritableKey = (typeof RENDERER_WRITABLE_KEYS)[number];
+
+function isRendererWritableKey(key: string): key is RendererWritableKey {
+  return (RENDERER_WRITABLE_KEYS as readonly string[]).includes(key);
+}
+
+ipcMain.on("config", (event, newConfig: unknown) => {
+  if (event.sender !== mainWindow.webContents) return;
+  if (typeof newConfig !== "object" || newConfig === null) return;
+
+  for (const [key, value] of Object.entries(newConfig)) {
+    if (!isRendererWritableKey(key) || typeof value !== "boolean") {
+      console.warn(`Ignoring invalid configuration key "${key}"`);
+      continue;
+    }
+
+    config[key] = value;
+  }
 });
