@@ -8,6 +8,7 @@ import started from "electron-squirrel-startup";
 import { initAutoLaunch } from "./native/autoLaunch";
 import { config } from "./native/config";
 import { initDiscordRpc } from "./native/discordRpc";
+import { initPermissionHandlers } from "./native/permissions";
 import { initTray } from "./native/tray";
 import { initVirtualMic } from "./native/virtualMic";
 import { BUILD_URL, createMainWindow, mainWindow } from "./native/window";
@@ -58,6 +59,9 @@ if (acquiredLock) {
 
   // create and configure the app when electron is ready
   app.on("ready", () => {
+    // restrict web permissions before any content is loaded
+    initPermissionHandlers();
+
     // create window and application contexts
     createMainWindow();
 
