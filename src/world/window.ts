@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from "electron";
 
 import { version } from "../../package.json";
 
+const isWayland = process.argv.includes("--stoat-is-wayland");
+
 contextBridge.exposeInMainWorld("native", {
   versions: {
     node: () => process.versions.node,
@@ -33,5 +35,6 @@ contextBridge.exposeInMainWorld("native", {
   screenPickerCallback: (idx: number, audio: boolean) =>
     ipcRenderer.send("screenPickerCallback", idx, audio),
 
-  isWayland: () => ipcRenderer.invoke("getIsWayland"),
+  // must be synchronous: the web client calls `if (native.isWayland?.())`
+  isWayland: () => isWayland,
 });

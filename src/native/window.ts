@@ -15,6 +15,7 @@ import windowIconAsset from "../../assets/desktop/icon.png?asset";
 
 import { config } from "./config";
 import { updateTrayMenu } from "./tray";
+import { isWayland } from "./virtualMic";
 
 // global reference to main window
 export let mainWindow: BrowserWindow;
@@ -61,6 +62,8 @@ export function createMainWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       spellcheck: true,
+      // read synchronously by the preload, see src/world/window.ts
+      additionalArguments: isWayland ? ["--stoat-is-wayland"] : [],
     },
   });
 
