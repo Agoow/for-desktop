@@ -28,6 +28,9 @@ const schema = {
   discordRpc: {
     type: "boolean",
   } as JSONSchema.Boolean,
+  autoUpdate: {
+    type: "boolean",
+  } as JSONSchema.Boolean,
   windowState: {
     type: "object",
     properties: {
@@ -60,6 +63,7 @@ const store = new Store({
     spellchecker: true,
     hardwareAcceleration: true,
     discordRpc: true,
+    autoUpdate: true,
     windowState: {
       x: 0,
       y: 0,
@@ -83,6 +87,7 @@ class Config {
       spellchecker: this.spellchecker,
       hardwareAcceleration: this.hardwareAcceleration,
       discordRpc: this.discordRpc,
+      autoUpdate: this.autoUpdate,
       windowState: this.windowState,
     });
   }
@@ -186,6 +191,22 @@ class Config {
 
     (store as never as { set(k: string, value: boolean): void }).set(
       "discordRpc",
+      value,
+    );
+
+    this.sync();
+  }
+
+  get autoUpdate() {
+    return (store as never as { get(k: string): boolean }).get("autoUpdate");
+  }
+
+  /**
+   * Takes effect on next launch
+   */
+  set autoUpdate(value: boolean) {
+    (store as never as { set(k: string, value: boolean): void }).set(
+      "autoUpdate",
       value,
     );
 

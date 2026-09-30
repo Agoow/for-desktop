@@ -54,7 +54,10 @@ const onNotifyUser = (_info: IUpdateInfo) => {
 
 if (acquiredLock) {
   // start auto update logic
-  updateElectronApp({ onNotifyUser });
+  // (this sends the app version, platform and IP to update.electronjs.org)
+  if (config.autoUpdate) {
+    updateElectronApp({ onNotifyUser, updateInterval: "1 hour" });
+  }
 
   // create and configure the app when electron is ready
   app.on("ready", () => {
